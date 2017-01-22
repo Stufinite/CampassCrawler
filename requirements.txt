@@ -1,0 +1,4 @@
+pymongo==3.4.0
+PyPrind==2.9.9
+requests==2.12.5
+simplejson==3.10.0
