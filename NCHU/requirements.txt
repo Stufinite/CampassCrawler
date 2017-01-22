@@ -1,4 +1,0 @@
-requests
-simplejson
-pyprind
-pymongo
