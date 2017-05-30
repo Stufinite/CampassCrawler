@@ -111,3 +111,7 @@ class Crawler(object):
 					tmp['course'].append(i)
 			with open("json/"+key+".json", 'w', encoding='utf-8') as f:
 				json.dump(tmp, f)
+
+if __name__ == '__main__':
+	c = Crawler()
+	c.start()
