@@ -23,6 +23,7 @@ for i in pyprind.prog_bar(dept_table.values()):
 
 		schema, weekdays, course = [i.text for i in soup.select('tr')[1].select('td')], [i.text for i in soup.select('tr')[2].select('td')], soup.select('tr')[3:-2]
 		schema = schema[:-2] + weekdays + schema[-1:]
-		result += tuple(map(lambda row:dict(zip(schema, row)), [ tuple(j.text for j in i.select('td'))[1:] for i in course]))
-		
+		result += (dict(zip(schema, (j.text for j in i.select('td')[1:]))) for i in course)
+
+
 json.dump(result, open('nsysu.json', 'w'))
