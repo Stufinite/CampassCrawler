@@ -1,3 +1,7 @@
+# project stuff
+ghostdriver.log
+phantomjs
+
 # virtualenv
 venv
 
