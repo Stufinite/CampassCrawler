@@ -10,6 +10,7 @@ class NsysuSpider(scrapy.Spider):
 	name = 'NSYSU'
 	allowed_domains = ['selcrs.nsysu.edu.tw/']
 	start_urls = ['http://selcrs.nsysu.edu.tw/menu1/qrycourse.asp']
+	driver = webdriver.PhantomJS(executable_path='./phantomjs')
 	day_table = {
 		'一':1,
 		'二':2,
@@ -36,9 +37,8 @@ class NsysuSpider(scrapy.Spider):
 		last_page = int(re.search(r"\/(.+?)頁",  soup.select('td')[-1].text).group(1).strip())
 
 		for page in range(1, last_page+1):
-			driver = webdriver.PhantomJS(executable_path='./phantomjs')
-			driver.get(response.url + '&page=' + str(page))
-			soup = BeautifulSoup(driver.page_source, "html.parser")
+			self.driver.get(response.url + '&page=' + str(page))
+			soup = BeautifulSoup(self.driver.page_source, "html.parser")
 
 			schema, weekdays, course = [i.text for i in soup.select('tr')[1].select('td')], [i.text for i in soup.select('tr')[2].select('td')], soup.select('tr')[3:-2]
 			schema = schema[:-2] + weekdays + schema[-1:]
