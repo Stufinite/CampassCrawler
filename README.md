@@ -1,5 +1,12 @@
 # NCHU-python-Parser (中興大學課程爬蟲)[![Build Status](https://travis-ci.org/Stufinite/Crawler-NCHU-course.svg?branch=master)](https://travis-ci.org/NCHUSG/Python-Crawler)
 
+# Ucrawler
+
+## school list:
+
+1. 中科:`scrapy crawl NUTC -o NUTC.json -t json`
+2. 中山:`scrapy crawl `scrapy crawl NSYSU -o nsysu.json -t json`
+
 1. 興大的計資中心有按照我的需求產出一份**類似**json的東西  但時常會出現不合法的字元,使得整份json噴掉，且計中提供的格式是format過的，所以這個parser可以將它minify、過濾資料內空白、空行，倘若學校資料來源不幸無法運作，請採用替代方案：
   * 使用自製的[Crawler](fallback)
 2. 將學校的json按照學制分類，只儲存必修和選修的課程代碼進到 `mongoDB`
