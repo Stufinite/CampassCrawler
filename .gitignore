@@ -1,6 +1,8 @@
 # project stuff
 ghostdriver.log
 phantomjs
+chromedriver
+*.json
 
 # virtualenv
 venv

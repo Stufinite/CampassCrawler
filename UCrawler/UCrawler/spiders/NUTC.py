@@ -42,7 +42,7 @@ class NutcSpider(scrapy.Spider):
             courseItem = UcrawlerItem()
             courseItem['department'], courseItem['grade'] = data['開課班級'][:[data['開課班級'].find(i) for i in '一二三四五' if data['開課班級'].find(i) != -1][0]], data['開課班級'][[data['開課班級'].find(i) for i in '一二三四五' if data['開課班級'].find(i) != -1][0]:]
             courseItem['for_dept'] = courseItem['department']
-            courseItem['title_parsed'] = data['課程']
+            courseItem['title'] = data['課程']
             courseItem['credits'] = float(data['時數 / 學分'].split('/')[-1])
             courseItem['obligatory_tf'] = True if data['修別'] == '必' else False
             courseItem['professor'] = data['上課教師']
@@ -61,4 +61,5 @@ class NutcSpider(scrapy.Spider):
 
             courseItem['code'] = data['課程代碼']
             courseItem['note'] = data['組別']
+            courseItem['campus'] = 'NUTC'
             yield courseItem

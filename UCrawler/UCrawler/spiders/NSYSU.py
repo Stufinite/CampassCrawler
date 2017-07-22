@@ -47,7 +47,7 @@ class NsysuSpider(scrapy.Spider):
 				courseItem['department'] = response.meta['key']
 				courseItem['for_dept'] = courseDict['系所別']
 				courseItem['grade'] = courseDict['年級']
-				courseItem['title_parsed'] = courseDict['科目名稱']
+				courseItem['title'] = courseDict['科目名稱']
 				courseItem['time'] = [{'day':self.day_table[time], 'time':list(courseDict[time])} for time in courseDict if time in self.day_table and courseDict[time]!='\xa0']
 				courseItem['credits'] = float(courseDict['學分'])
 				courseItem['obligatory_tf'] = True if courseDict['必選修'] == '必' else False
@@ -55,4 +55,5 @@ class NsysuSpider(scrapy.Spider):
 				courseItem['location'] = courseDict['教室']
 				courseItem['code'] = courseDict['課號']
 				courseItem['note'] = courseDict['備註']
+				courseItem['campus'] = 'NSYSU'
 				yield courseItem

@@ -13,7 +13,7 @@ class UcrawlerItem(scrapy.Item):
 	department = scrapy.Field()
 	for_dept = scrapy.Field()
 	grade = scrapy.Field()
-	title_parsed = scrapy.Field()
+	title = scrapy.Field()
 	time = scrapy.Field()
 	credits = scrapy.Field()
 	obligatory_tf = scrapy.Field()
@@ -21,3 +21,4 @@ class UcrawlerItem(scrapy.Item):
 	location = scrapy.Field()
 	code = scrapy.Field()
 	note = scrapy.Field()
+	campus = scrapy.Field()
