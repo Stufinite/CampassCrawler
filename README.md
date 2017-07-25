@@ -1,4 +1,4 @@
-# CampassCrawler (大學課程爬蟲)[![Build Status](https://travis-ci.org/Stufinite/Crawler-NCHU-course.svg?branch=master)](https://travis-ci.org/NCHUSG/Python-Crawler)
+# CampassCrawler (大學課程爬蟲)[![Build Status](https://travis-ci.org/Stufinite/CampassCrawler.svg?branch=master)](https://travis-ci.org/Stufinite/CampassCrawler)
 
 ## [爬蟲爬取清單](https://docs.google.com/spreadsheets/d/1shRsbpbYUQtol0Q1Gbgdd3xn4dQy0MHkqDfLIUlKPIQ/edit#gid=270187308)
 
