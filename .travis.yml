@@ -1,0 +1,11 @@
+language: python
+# if command bellow need to executed in sudo
+# add this line.
+# sudo: required
+python:
+  - 3.5
+  - 3.6
+install:
+  - pip install -r requirements.txt
+script:
+  - cd UCrawler; scrapy crawl NUTC -o unittest/NUTC.json -t json; cd unittest; python NUTC.py
