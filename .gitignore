@@ -78,3 +78,5 @@ docs/_build/
 
 # PyBuilder
 target/
+/.vs
+/UCrawler/.vs
