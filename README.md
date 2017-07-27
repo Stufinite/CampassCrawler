@@ -62,7 +62,10 @@
           ]
         }
       ],
-      "professor": "劉若蘭",
+      "professor": [
+        "劉若蘭",
+        "(---)"
+      ],
       "department": "會資",
       "credits": 3.0,
       "note": "---",
