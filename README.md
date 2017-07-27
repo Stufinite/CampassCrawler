@@ -21,8 +21,8 @@
 1. 使用虛擬環境：
   1. 創建一個虛擬環境：`virtualenv venv`
   2. 啟動方法
-    1. for Linux：`. venv/bin/activate`
-    2. for Windows：`venv\Scripts\activate`
+     1. for Linux：`. venv/bin/activate`
+     2. for Windows：`venv\Scripts\activate`
 2. `pip install -r requirements.txt`
 
 ### Schema
@@ -70,6 +70,8 @@
       "for_dept": "會資"
     }
     ```
+3. 例外：
+  1. 欄位為空值：統一填 `None`
 
 ## Built With
 
