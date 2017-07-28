@@ -4,3 +4,8 @@ simplejson==3.10.0
 scrapy
 selenium
 bs4
+html5lib
+lxml
+requests
+pandas
+json
