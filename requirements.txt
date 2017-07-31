@@ -6,5 +6,4 @@ selenium
 bs4
 html5lib
 lxml
-requests
 pandas
