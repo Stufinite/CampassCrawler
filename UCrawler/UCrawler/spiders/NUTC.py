@@ -21,7 +21,7 @@ class NutcSpider(scrapy.Spider):
     with open(name + 'genra.json', 'w') as f:
         genra = {
             '通識':'通識類',
-            '體育類':'體育類',
+            '體育':'體育類',
             '語言':'其他類'
         }
         json.dump(genra, f)
@@ -45,7 +45,10 @@ class NutcSpider(scrapy.Spider):
 
         schema, course = soup.select('.empty_html tr')[0], soup.select('.empty_html tr')[1:]
         schema = tuple(i.text for i in schema.select('th'))
-        dataList = tuple(map(lambda result: dict(zip(schema, result)), tuple(map(lambda c:tuple(map(lambda x:x.text, c.select('td'))), course))))
+        # dataList = tuple(map(lambda result: dict(zip(schema, result)), tuple(map(lambda c:tuple(map(lambda x:x.text, c.select('td'))), course))))
+        dataList = (dict(zip(schema, result)) for result in (tuple(x.text for x in c.select('td')) for c in course))
+        print(dataList)
+
         for data in dataList:
             courseItem = UcrawlerItem()
             courseItem['department'], courseItem['grade'] = data['開課班級'][:[data['開課班級'].find(i) for i in '一二三四五' if data['開課班級'].find(i) != -1][0]], data['開課班級'][[data['開課班級'].find(i) for i in '一二三四五' if data['開課班級'].find(i) != -1][0]:]
