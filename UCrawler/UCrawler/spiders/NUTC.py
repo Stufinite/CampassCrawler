@@ -18,6 +18,14 @@ class NutcSpider(scrapy.Spider):
         '日':7,
     }
 
+    with open(name + 'genra.json', 'w') as f:
+        genra = {
+            '通識':'通識類',
+            '體育類':'體育類',
+            '語言':'其他類'
+        }
+        json.dump(genra, f)
+
     def start_requests(self):
         driver = webdriver.Chrome(executable_path=os.path.join('.', 'chromedriver'))
         driver.get(self.start_urls[0])
@@ -42,7 +50,6 @@ class NutcSpider(scrapy.Spider):
             courseItem = UcrawlerItem()
             courseItem['department'], courseItem['grade'] = data['開課班級'][:[data['開課班級'].find(i) for i in '一二三四五' if data['開課班級'].find(i) != -1][0]], data['開課班級'][[data['開課班級'].find(i) for i in '一二三四五' if data['開課班級'].find(i) != -1][0]:]
             courseItem['for_dept'] = courseItem['department']
-            courseItem['title'] = data['課程']
             courseItem['credits'] = float(data['時數 / 學分'].split('/')[-1])
             courseItem['obligatory_tf'] = True if data['修別'] == '必' else False
             courseItem['professor'] = data['上課教師']
@@ -62,4 +69,11 @@ class NutcSpider(scrapy.Spider):
             courseItem['code'] = data['課程代碼']
             courseItem['note'] = data['組別']
             courseItem['campus'] = 'NUTC'
+
+            if self.genra.get(courseItem['department'], '') == '通識類':
+                courseItem['discipline'] = re.search(r'\((.+?)\)', data['課程']).group(1)
+                courseItem['title'] = data['課程'].replace(re.search(r'\((.+?)\)', data['課程']).group(0), '').strip()
+            else:
+                courseItem['discipline'] = ''
+                courseItem['title'] = data['課程']
             yield courseItem

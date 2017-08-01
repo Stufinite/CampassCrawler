@@ -22,3 +22,4 @@ class UcrawlerItem(scrapy.Item):
 	code = scrapy.Field()
 	note = scrapy.Field()
 	campus = scrapy.Field()
+	discipline = scrapy.Field()
