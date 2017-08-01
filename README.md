@@ -39,39 +39,53 @@
   	location （上課地點）
   	code （課程id）
   	note (備註)
-  	campus （校區）
+    campus （校區）
+  	discipline （通識領域類別 e.q. 自然科學領域, 社會科學領域...）
     ```
-2. 爬蟲輸出 JSON 格式：  
+2. 爬蟲輸出 JSON 格式： 
+    [參考網址](https://aisap.nutc.edu.tw/public/day/course_list.aspx?sem=1061&stype=ge)
 
     ```
     {
-      "title": "審計學 (學年)",
-      "grade": "三１",
-      "code": "D16049",
-      "obligatory_tf": true,
+      "note": "---",
+      "obligatory_tf": false,
+      "department": "通識",
       "location": [
-        "(---)"
+        "(3304)"
       ],
+      "grade": "三Ａ",
       "time": [
         {
-          "day": 4,
           "time": [
             5,
-            6,
-            7
-          ]
+            6
+          ],
+          "day": 1
         }
       ],
-      "professor": [
-        "劉若蘭",
-        "(---)"
-      ],
-      "department": "會資",
-      "credits": 3.0,
-      "note": "---",
+      "title": "心理學與自我成長",
+      "discipline": "社會科學領域",
+      "for_dept": "通識",
+      "professor": "楊淳斐",
+      "code": "D19009",
       "campus": "NUTC",
-      "for_dept": "會資"
+      "credits": 2.0
     }
+    ```
+
+    另外，輸出一份課程類別的清單。api會以此清單做課程的分類  
+    類別固定這三種:`通識類, 體育類, 其他類`
+    ```
+    with open(name + 'genra.json', 'w') as f:
+        genra = {
+            '通識':'通識類',
+            '體育類':'體育類',
+            '語言':'其他類',
+            'xxxx':'通識類',
+            'yyyy':'體育類',
+            'zzzz':'其他類',
+        }
+        json.dump(genra, f)
     ```
 3. 例外：
   1. 欄位為空值：統一填 `None`
