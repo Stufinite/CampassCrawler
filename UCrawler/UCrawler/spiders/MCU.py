@@ -19,7 +19,9 @@ class McuSpider(scrapy.Spider):
     chineseKey ='研'
     def start_requests(self):
         #先用selenium模仿web使用者動作
-        driver=webdriver.Chrome(executable_path="./chromedriver")
+        # driver=webdriver.Chrome(executable_path="./chromedriver")
+        driver = cross_selenium(True)
+        
         driver.get(self.start_urls[0])
         #一些仿USER的動作
         #放入bs4裏面

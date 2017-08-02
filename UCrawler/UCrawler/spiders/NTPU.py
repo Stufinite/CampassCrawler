@@ -7,7 +7,7 @@ from selenium import webdriver
 import pandas as pd
 import json
 import re
-from ..items import UcrawlerItem
+from UCrawler.items import UcrawlerItem
 #from UCrawler.items import UcrawlerItem
 
 class NtpuSpider(scrapy.Spider):

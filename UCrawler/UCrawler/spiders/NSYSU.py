@@ -4,13 +4,14 @@ import requests, json, pyprind, re, os
 from selenium import webdriver
 from bs4 import BeautifulSoup
 from UCrawler.items import UcrawlerItem
+from .setting_selenium import cross_selenium
 
 
 class NsysuSpider(scrapy.Spider):
 	name = 'NSYSU'
 	allowed_domains = ['selcrs.nsysu.edu.tw/']
 	start_urls = ['http://selcrs.nsysu.edu.tw/menu1/qrycourse.asp']
-	driver = webdriver.PhantomJS(executable_path=os.path.join('.', 'phantomjs'))
+	driver = cross_selenium()
 	day_table = {
 		'一':1,
 		'二':2,

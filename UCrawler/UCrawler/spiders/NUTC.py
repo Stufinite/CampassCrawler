@@ -3,6 +3,7 @@ import scrapy, json, pyprind, re, time, os
 from selenium import webdriver
 from bs4 import BeautifulSoup
 from UCrawler.items import UcrawlerItem
+from .setting_selenium import cross_selenium
 
 class NutcSpider(scrapy.Spider):
     name = 'NUTC'
@@ -27,7 +28,7 @@ class NutcSpider(scrapy.Spider):
         json.dump(genra, f)
 
     def start_requests(self):
-        driver = webdriver.Chrome(executable_path=os.path.join('.', 'chromedriver'))
+        driver = cross_selenium(True)
         driver.get(self.start_urls[0])
         dropdown = driver.find_element_by_id('sem')
         option = dropdown.find_elements_by_tag_name("option")
