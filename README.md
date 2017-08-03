@@ -27,7 +27,7 @@
 
 ### Schema
 
-1. 輸出一份課程類別的清單。api會以此清單做課程的分類  
+1. 建立一份課程類別的清單。api會以此清單做課程的分類  
 類別固定這三種:`通識類, 體育類, 其他類`  
 此變數定義在spider的class variable裏面  
 [參考中科大的scrapy範例](UCrawler/Ucrawler/spiders/NUTC.py)
