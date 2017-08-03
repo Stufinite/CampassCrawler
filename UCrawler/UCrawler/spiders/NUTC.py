@@ -28,7 +28,6 @@ class NutcSpider(scrapy.Spider):
         json.dump(genra, f)
 
     def start_requests(self):
-        #driver = cross_selenium(True)
         driver = cross_selenium()
         driver.get(self.start_urls[0])
         dropdown = driver.find_element_by_id('sem')
