@@ -19,22 +19,22 @@ class NutcSpider(scrapy.Spider):
         '日':7,
     }
 
-    with open(name + 'genra.json', 'w') as f:
-        genra = {
-            '通識':'通識類',
-            '體育':'體育類',
-            '語言':'其他類'
-        }
-        json.dump(genra, f)
+    genra = {
+        '通識':'通識類',
+        '體育':'體育類',
+        '語言':'其他類'
+    }
 
     def start_requests(self):
-        driver = cross_selenium()
+        driver = cross_selenium(True)
         driver.get(self.start_urls[0])
         dropdown = driver.find_element_by_id('sem')
         option = dropdown.find_elements_by_tag_name("option")
         option[-1].click()
         time.sleep(3)
         soup = BeautifulSoup(driver.page_source, "html.parser")
+        driver.close()
+
         dept_table = {i.text: i['value'] for i in soup.select('.selgray')[1].select('option') if '所' not in i.text and '專' not in i.text}
         latest_semester = soup.select('#sem')[0].select('option')[-1]['value']
 
@@ -48,7 +48,6 @@ class NutcSpider(scrapy.Spider):
         schema = tuple(i.text for i in schema.select('th'))
         # dataList = tuple(map(lambda result: dict(zip(schema, result)), tuple(map(lambda c:tuple(map(lambda x:x.text, c.select('td'))), course))))
         dataList = (dict(zip(schema, result)) for result in (tuple(x.text for x in c.select('td')) for c in course))
-        print(dataList)
 
         for data in dataList:
             courseItem = UcrawlerItem()
@@ -58,26 +57,24 @@ class NutcSpider(scrapy.Spider):
             courseItem['obligatory_tf'] = True if data['修別'] == '必' else False
             courseItem['professor'] = data['上課教師']
             courseItem['location'] = re.findall(r'(\(.+?\))', data['上課時間/教室'])
-
-            tmpTime = [time.replace(location, '').strip() for time, location in list(zip(data['上課時間/教室'].split('/'), courseItem['location']))]
-            tmpTime = [dict(day=self.day_table[t[2]], time=re.search(r'第(.+?)節', t).group(1) ) for t in tmpTime]
-            for i in tmpTime:
-                if len(i['time']) == 1:
-                    i['time'] = [int(i['time'])]
-                elif '、' in i['time']:
-                    i['time'] = [int(i) for i in i['time'].split('、')]
-                else:
-                    i['time'] = tuple(range(int(i['time'].split('～')[0]), int(i['time'].split('～')[1])+1))
-            courseItem['time'] = tmpTime
-
+            courseItem['time'] = self.parse_time(data['上課時間/教室'].split('/'), courseItem['location'])
             courseItem['code'] = data['課程代碼']
             courseItem['note'] = data['組別']
             courseItem['campus'] = 'NUTC'
-
-            if self.genra.get(courseItem['department'], '') == '通識類':
-                courseItem['discipline'] = re.search(r'\((.+?)\)', data['課程']).group(1)
-                courseItem['title'] = data['課程'].replace(re.search(r'\((.+?)\)', data['課程']).group(0), '').strip()
-            else:
-                courseItem['discipline'] = ''
-                courseItem['title'] = data['課程']
+            courseItem['discipline'] = re.search(r'\((.+?)\)', data['課程']).group(1) if self.genra.get(courseItem['department'], '') == '通識類' else ''
+            courseItem['title'] = data['課程'].replace(re.search(r'\((.+?)\)', data['課程']).group(0), '').strip() if self.genra.get(courseItem['department'], '') == '通識類' else data['課程']
+            courseItem['category'] = self.genra.get(courseItem['department'], '必修類' if courseItem['obligatory_tf'] else '選修類')
             yield courseItem
+
+    @classmethod
+    def parse_time(cls, time_list, location_list):
+        tmpTime = [time.replace(location, '').strip() for time, location in list(zip(time_list, location_list))]
+        tmpTime = [dict(day=cls.day_table[t[2]], time=re.search(r'第(.+?)節', t).group(1) ) for t in tmpTime]
+        for i in tmpTime:
+            if len(i['time']) == 1:
+                i['time'] = [int(i['time'])]
+            elif '、' in i['time']:
+                i['time'] = [int(i) for i in i['time'].split('、')]
+            else:
+                i['time'] = tuple(range(int(i['time'].split('～')[0]), int(i['time'].split('～')[1])+1))
+        return tmpTime
