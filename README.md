@@ -26,68 +26,85 @@
 2. `pip install -r requirements.txt`
 
 ### Schema
-1. 需要欄位：
-    ```
-    department （開課系所）
-  	for_dept (上課系所)
-  	grade （年級）
-  	title_parsed （課名）
-  	time （上課時間）
-  	credits (學分)
-  	obligatory_tf （必修或選修）
-  	professor （教授）
-  	location （上課地點）
-  	code （課程id）
-  	note (備註)
-    campus （校區）
-  	discipline （通識領域類別 e.q. 自然科學領域, 社會科學領域...）
-    ```
-2. 爬蟲輸出 JSON 格式： 
+
+1. 輸出一份課程類別的清單。api會以此清單做課程的分類  
+類別固定這三種:`通識類, 體育類, 其他類`  
+此變數定義在spider的class variable裏面  
+[參考中科大的scrapy範例](UCrawler/Ucrawler/spiders/NUTC.py)
+
+```
+class NutcSpider(scrapy.Spider):
+    name = '某某學校'
+    allowed_domains = [某某學校網址]
+
+
+    genra = {
+        '通識':'通識類',
+        '體育類':'體育類',
+        '語言':'其他類',
+        'xxxx':'通識類',
+        'yyyy':'體育類',
+        'zzzz師培':'其他類',
+        'zzzz軍訓':'其他類',
+        ...
+    }
+
+    def start_requests(self):
+        ....
+        ....
+        ....
+```
+
+2. 需要欄位：
+    * department: 開課系所
+    * for_dept: 上課系所
+    * grade: 年級
+    * title_parsed: 課名
+    * time: 上課時間
+    * credits: 學分
+    * obligatory_tf: 必修或選修
+    * professor: 教授
+    * location: 上課地點
+    * code: 課程id
+    * note: 備註
+    * campus: 校區
+    * discipline: 通識領域類別 e.q. 自然科學領域, 社會科學領域...
+    * category: 課程類別，會根據`1.的genra`變數，去判斷，把體育類的課程分類給`體育類`，軍訓、師培課程分為`其他類`* ，資工、資管、法律等正常系所的課程，依據必選修分為`必修類、選修類`
+        * 程式碼統一這樣寫:`courseItem['category'] = self.genra.get(courseItem['department'], '必修類' if courseItem['obligatory_tf'] else '選修類')`
+
+3. 爬蟲輸出 JSON 格式： 
     [參考網址](https://aisap.nutc.edu.tw/public/day/course_list.aspx?sem=1061&stype=ge)
 
     ```
     {
       "note": "---",
-      "obligatory_tf": false,
-      "department": "通識",
-      "location": [
-        "(3304)"
-      ],
-      "grade": "三Ａ",
+      "for_dept": "通識",
+      "title": "心理學與自我成長",
       "time": [
         {
+          "day": 1,
           "time": [
             5,
             6
-          ],
-          "day": 1
+          ]
         }
       ],
-      "title": "心理學與自我成長",
-      "discipline": "社會科學領域",
-      "for_dept": "通識",
       "professor": "楊淳斐",
-      "code": "D19009",
+      "location": [
+        "(3304)"
+      ],
       "campus": "NUTC",
-      "credits": 2.0
+      "grade": "三Ａ",
+      "department": "通識",
+      "category": "通識類",
+      "code": "D19009",
+      "obligatory_tf": false,
+      "credits": 2.0,
+      "discipline": "社會科學領域"
     }
     ```
 
-    另外，輸出一份課程類別的清單。api會以此清單做課程的分類  
-    類別固定這三種:`通識類, 體育類, 其他類`
-    ```
-    with open(name + 'genra.json', 'w') as f:
-        genra = {
-            '通識':'通識類',
-            '體育類':'體育類',
-            '語言':'其他類',
-            'xxxx':'通識類',
-            'yyyy':'體育類',
-            'zzzz':'其他類',
-        }
-        json.dump(genra, f)
-    ```
-3. 例外：
+4. 例外：
   1. 欄位為空值：統一填 `None`
 
 ## Built With
@@ -100,6 +117,8 @@
 * **戴均民** - *Initial work* - [taichunmin](https://github.com/taichunmin)
 * **黃川哲** - *Initial work* - [CJHwong](https://github.com/CJHwong)
 * **張泰瑋** [david](https://github.com/david30907d)
+* **王選仲**
+* **蔡鬆鬆**
 
 ## Acknowledgments
 
