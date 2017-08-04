@@ -7,3 +7,4 @@ bs4
 html5lib
 lxml
 pandas
+# pypiwin32
