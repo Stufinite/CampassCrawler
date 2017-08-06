@@ -1,0 +1,10 @@
+PyPrind==2.9.9
+requests==2.12.5
+simplejson==3.10.0
+scrapy
+selenium
+bs4
+html5lib
+lxml
+pandas
+pypiwin32
