@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import scrapy, json, pyprind, re, time, os
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from UCrawler.items import UcrawlerItem
 from .setting_selenium import cross_selenium
@@ -29,13 +32,18 @@ class NutcSpider(scrapy.Spider):
         driver = cross_selenium()
         # driver = cross_selenium(True)
         driver.get(self.start_urls[0])
-        # dropdown = driver.find_element_by_id('sem')
-        dropdown = driver.find_element_by_id('//*[@id="sem"]')
-    	option = dropdown.find_elements_by_tag_name("option")
-    	option[-1].click()
-    	time.sleep(3)
-        soup = BeautifulSoup(driver.page_source, "html.parser")
-        driver.close()
+        try:
+            element = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.ID, "sem"))
+            )
+        finally:
+            dropdown = driver.find_element_by_id('sem')
+            # dropdown = driver.find_element_by_id('//*[@id="sem"]')
+            option = dropdown.find_elements_by_tag_name("option")
+            option[-1].click()
+            time.sleep(3)
+            soup = BeautifulSoup(driver.page_source, "html.parser")
+            driver.close()
 
         dept_table = {i.text: i['value'] for i in soup.select('.selgray')[1].select('option') if '所' not in i.text and '專' not in i.text}
         latest_semester = soup.select('#sem')[0].select('option')[-1]['value']
