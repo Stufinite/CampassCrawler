@@ -13,6 +13,7 @@ def cross_selenium(chrome=False):
 		if chrome:
 			driver = webdriver.Chrome(executable_path=os.path.join('.', 'chromedriver'))
 		else:
-			driver = webdriver.PhantomJS(executable_path=os.path.join('.', 'phantomjs'))
+			# driver = webdriver.PhantomJS(executable_path=os.path.join('.', 'phantomjs'))
+			driver = webdriver.PhantomJS()
 	return driver 
 

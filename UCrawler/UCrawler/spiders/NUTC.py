@@ -37,11 +37,7 @@ class NutcSpider(scrapy.Spider):
                 EC.presence_of_element_located((By.ID, "sem"))
             )
         finally:
-            elem = driver.find_element_by_id("tabs1")
-            print(elem.text)
-            print(elem.tag_name)
-            # dropdown = driver.find_element_by_id('sem')
-            dropdown = driver.find_element_by_id('//*[@id="sem"]')
+            dropdown = driver.find_element_by_id('sem')
             option = dropdown.find_elements_by_tag_name("option")
             option[-1].click()
             time.sleep(3)
