@@ -27,7 +27,6 @@ class NutcSpider(scrapy.Spider):
 
     def start_requests(self):
         driver = cross_selenium()
-        # driver = cross_selenium(True)
         driver.get(self.start_urls[0])
         dropdown = driver.find_element_by_id('sem')
         option = dropdown.find_elements_by_tag_name("option")
