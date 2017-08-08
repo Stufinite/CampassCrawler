@@ -20,6 +20,16 @@ class NutcSpider(scrapy.Spider):
         '五':5,
         '六':6,
         '日':7,
+        '１':1,
+        '２':2,
+        '３':3,
+        '４':4,
+        '５':5,
+        '６':6,
+        '７':7,
+        '８':8,
+        '９':9,
+        '０':0,
     }
 
     genra = {
@@ -80,9 +90,11 @@ class NutcSpider(scrapy.Spider):
         tmpTime = [dict(day=cls.day_table[t[2]], time=re.search(r'第(.+?)節', t).group(1) ) for t in tmpTime]
         for i in tmpTime:
             if len(i['time']) == 1:
-                i['time'] = [int(i['time'])]
+                i['time'] = [int(cls.day_table.get(i['time'], i['time']))]
+            elif '、' in i['time'] and '～' in i['time']:
+                i['time'] = [int(cls.day_table.get(i, i)) for i in i['time'].split('、') if '～' not in i] + list(range(int(cls.day_table.get(i['time'].split('～')[0], i['time'].split('～')[0])), int(cls.day_table.get(i['time'].split('～')[1][0], i['time'].split('～')[1][0]))+1))
             elif '、' in i['time']:
-                i['time'] = [int(i) for i in i['time'].split('、')]
+                i['time'] = [int(cls.day_table.get(i, i)) for i in i['time'].split('、')]
             else:
-                i['time'] = tuple(range(int(i['time'].split('～')[0]), int(i['time'].split('～')[1])+1))
+                i['time'] = tuple(range(int(cls.day_table.get(i['time'].split('～')[0], i['time'].split('～')[0])), int(cls.day_table.get(i['time'].split('～')[1], i['time'].split('～')[1]))+1))
         return tmpTime
