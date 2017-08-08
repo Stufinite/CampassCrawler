@@ -7,7 +7,7 @@ class UCrawlerTest(unittest.TestCase):
 		status = True
 		with open('scrapy.log', 'r', encoding='UTF-8') as f:
 			for i in f:
-				if 'fail' in i:
+				if 'Traceback' in i:
 					status = False
 					break
 		self.assertEqual(True, status)
