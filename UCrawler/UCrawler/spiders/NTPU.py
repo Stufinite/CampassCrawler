@@ -8,6 +8,7 @@ import pandas as pd
 import json
 import re
 from UCrawler.items import UcrawlerItem
+import queue
 #from UCrawler.items import UcrawlerItem
 
 class NtpuSpider(scrapy.Spider):
@@ -17,7 +18,6 @@ class NtpuSpider(scrapy.Spider):
     #driver = webdriver.Chrome(executable_path='D:\chromedriver')
     #headers = {'user-agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36'}
     headers = {'user-agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36','referer':'http://www.ntpu.edu.tw/chinese/'}
-
 
     def start_requests(self):
         url = 'https://sea.cc.ntpu.edu.tw/pls/dev_stud/course_query_all.CHI_query_common'
@@ -43,14 +43,13 @@ class NtpuSpider(scrapy.Spider):
             #This fail
             #request_body = json.dumps(FormData)
             #yield Request(postpath, method= "POST", body=request_body, headers=self.headers )
-            yield scrapy.FormRequest(postpath, formdata=FormData)
+            yield scrapy.FormRequest(postpath, formdata=FormData, encoding='big5')
 
     def parse(self, response):
         soup = BeautifulSoup(response.body, 'lxml')
-
         table = soup.find('table')
         df_course = pd.read_html(str(table))[0]
-
+        
         # duplicate rows having more than one for_depts and obligatory_tf
         del_row_idxs = []
         add_rows = []
@@ -87,19 +86,20 @@ class NtpuSpider(scrapy.Spider):
             
             courseItem = UcrawlerItem()
             ## department, obligatory_tf
-            courseItem['department'] = row['開課系所']
+            courseItem['department'] = row['開課系所'] if row['開課系所'] != None else None
             courseItem['obligatory_tf'] = True if row['必選修別'] == '必' else False
 
             ## for_dept, grade
             if not '通' in row['必選修別']:
-                for_dept = re.sub("\d", "",  row['應修系級'])
-                grade = row['應修系級'].replace(for_dept, "")
+                for_dept = re.sub("\d", "",  row['應修系級']) if row['應修系級'] != None else None
+                grade = row['應修系級'].replace(for_dept, "") if row['應修系級'] != None else None
             else:
-                courseItem = ", ".join(row['應修系級'].split())
+                for_dept = ", ".join(row['應修系級'].split()) if row['應修系級'] != None else None
                 grade = None
+
             courseItem['for_dept'] = for_dept
             courseItem['grade'] = grade
-
+            
             ## title, note
             if '備註' in row['科目名稱']:
                 title = row['科目名稱'].split("備註")[0]
@@ -114,47 +114,20 @@ class NtpuSpider(scrapy.Spider):
             courseItem['note'] = note
 
             ## professor
-            row['授課教師'] = row['授課教師'].replace("張�睇�","張恒豪").replace("林�琝�","林恒志")
+            if row['授課教師'] != None:
+                row['授課教師'] = row['授課教師'].replace("張�睇�","張恒豪").replace("林�琝�","林恒志")
+                profs = list(row['授課教師'].split())
+            else:
+                profs = []
+
             ##deal with error code
             #if '�'.encode() in str(row['授課教師']).encode():
             #    print(row[['科目名稱','授課教師']])
-            profs = list(row['授課教師'].split())
             courseItem['professor'] = profs
 
             ## time, location
-            if len(row['上課時間、教室'].replace('\t', ' ').split()) >= 1:
-                timeAndClassroom = row['上課時間、教室'].replace('\t', ' ')
-                items = timeAndClassroom.split()
-        
-                timeDist = []
-                locationLi = []
-                for item in items:
-                    if '週一' in item or '週二' in item or '週三' in item or '週四' in item or '週五' in item or '週六' in item or '週日' in item:
-                        timeObj = {}
-                        if '週一' in item:
-                            timeObj['day'] = 1
-                        elif '週二' in item:
-                            timeObj['day'] = 2
-                        elif '週三' in item:
-                            timeObj['day'] = 3
-                        elif '週四' in item:
-                            timeObj['day'] = 4
-                        elif '週五' in item:
-                            timeObj['day'] = 5
-                        elif '週六' in item:
-                            timeObj['day'] = 6
-                        elif '週日' in item:
-                            timeObj['day'] = 7
-        #                 re_words = re.compile(u"[\u4e00-\u9fa5]+") 
-                        re_words = re.compile(u"[\d]+") 
-                        res = list(pd.Series(re.findall(re_words, item)).apply(lambda x : int(x)))
-                        timeObj['time'] = [i for i in range(res[0],res[1]+1)]
-                        timeDist.append(timeObj)
-                    else:
-                        if not '維護' in item:
-                            locationLi.append(item)
-                Ctime = timeDist if timeDist != [] else None 
-                location = locationLi if locationLi != [] else None
+            if row['上課時間、教室'] != None:
+                Ctime, location = self.ProcessTimeAndLocation(row['上課時間、教室'])
             else:
                 Ctime = None
                 location = None
@@ -162,12 +135,52 @@ class NtpuSpider(scrapy.Spider):
             courseItem['location'] = location
 
             ## credits
-            courseItem['credits'] = float(row['學分'])
+            courseItem['credits'] = float(row['學分']) if row['學分'] != None else None
 
             ## code, campus
-            courseItem['code'] = row['課程流水號']
+            courseItem['code'] = row['課程流水號'] if row['課程流水號'] != None else None
             courseItem['campus'] = 'NTPU'
             
             yield courseItem
 
 
+    @staticmethod
+    def ProcessTimeAndLocation(TimeAndLocation):
+        if len(TimeAndLocation.replace('\t', ' ').split()) >= 1:
+            timeAndClassroom = TimeAndLocation.replace('\t', ' ')
+            items = timeAndClassroom.split()
+
+            timeDist = []
+            locationLi = []
+            for item in items:
+                if '週一' in item or '週二' in item or '週三' in item or '週四' in item or '週五' in item or '週六' in item or '週日' in item:
+                    timeObj = {}
+                    if '週一' in item:
+                        timeObj['day'] = 1
+                    elif '週二' in item:
+                        timeObj['day'] = 2
+                    elif '週三' in item:
+                        timeObj['day'] = 3
+                    elif '週四' in item:
+                        timeObj['day'] = 4
+                    elif '週五' in item:
+                        timeObj['day'] = 5
+                    elif '週六' in item:
+                        timeObj['day'] = 6
+                    elif '週日' in item:
+                        timeObj['day'] = 7
+    #                 re_words = re.compile(u"[\u4e00-\u9fa5]+") 
+                    re_words = re.compile(u"[\d]+") 
+                    res = list(pd.Series(re.findall(re_words, item)).apply(lambda x : int(x)))
+                    timeObj['time'] = [i for i in range(res[0],res[1]+1)]
+                    timeDist.append(timeObj)
+                else:
+                    if not '維護' in item:
+                        locationLi.append(item)
+            Ctime = timeDist if timeDist != [] else None 
+            location = locationLi if locationLi != [] else None
+        else:
+            Ctime = None
+            location = None
+
+        return Ctime, location
