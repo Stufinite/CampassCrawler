@@ -8,4 +8,4 @@ python:
 install:
   - pip install -r requirements.txt
 script:
-  - cd UCrawler; scrapy crawl NUTC -o unittest/NUTC.json -t json; cd unittest; python NUTC.py
+  - cd UCrawler; scrapy crawl NUTC -o unittest/NUTC.json -t json --logfile scrapy.log; python test.py;
