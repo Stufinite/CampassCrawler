@@ -9,3 +9,5 @@ install:
   - pip install -r requirements.txt
 script:
   - cd UCrawler; scrapy crawl NUTC -o unittest/NUTC.json -t json --logfile scrapy.log; python test.py;
+  - scrapy crawl NSYSU -o unittest/NSYSU.json -t json --logfile scrapy.log; python test.py;
+  - scrapy crawl NTPU -o unittest/NTPU.json -t json --logfile scrapy.log; python test.py;
