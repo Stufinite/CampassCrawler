@@ -23,16 +23,18 @@ class NtpuSpider(scrapy.Spider):
         url = 'https://sea.cc.ntpu.edu.tw/pls/dev_stud/course_query_all.CHI_query_common'
         re = requests.get(url, headers = self.headers)
         soup = BeautifulSoup(re.text, 'lxml')
-        elem = soup.find('select')
+        postpath = 'https://sea.cc.ntpu.edu.tw/pls/dev_stud/course_query_all.queryByAllConditions'
 
+        ## College based finder
+        elem = soup.find('select')
         schoolList = []
         for item in elem.find_all('option'):
             schoolList.append(item.string)
             print(item.string)
         schoolList.pop(0)
 
-        postpath = 'https://sea.cc.ntpu.edu.tw/pls/dev_stud/course_query_all.queryByAllConditions'
         for school in schoolList:
+            print(school)
             FormData = {
             'qCollege': school.encode('big5'),
             'qYear':'106',
@@ -45,9 +47,31 @@ class NtpuSpider(scrapy.Spider):
             #yield Request(postpath, method= "POST", body=request_body, headers=self.headers )
             yield scrapy.FormRequest(postpath, formdata=FormData, encoding='big5')
 
+        ## department based finder(there are some special category will be ignored in college finder)
+        elem = soup.find_all('select')[1].select("optgroup[label='其它']")[0]
+        deptList = []
+        for dept in elem.find_all('option'):
+            print(dept.text)
+            deptList.append(dept['value'])
+
+        for dept in deptList:
+            FormData = {
+            'qdept': dept,
+            'qYear':'106',
+            'qTerm':'1',
+            'seq1':'A',
+            'seq2':'M'
+            }
+            
+            yield scrapy.FormRequest(postpath, formdata=FormData, encoding='big5')
+
+
     def parse(self, response):
         soup = BeautifulSoup(response.body, 'lxml')
-        table = soup.find('table')
+        try:
+            table = soup.find('table')
+        except:
+            print("No Table Found!")
         df_course = pd.read_html(str(table))[0]
         
         # duplicate rows having more than one for_depts and obligatory_tf
@@ -68,11 +92,11 @@ class NtpuSpider(scrapy.Spider):
 
         df_course.apply(duplicateDepts,axis=1)
         
-        print('preprocess len = ', len(df_course))
+        # print('preprocess len = ', len(df_course))
         add_df = pd.DataFrame(add_rows)
         df_course = pd.concat([df_course, add_df])
         df_course.drop(del_row_idxs, inplace=True)
-        print('processed len = ', len(df_course))
+        # print('processed len = ', len(df_course))
 
         # match columns
         for row in df_course.iterrows():
@@ -140,6 +164,7 @@ class NtpuSpider(scrapy.Spider):
             ## code, campus
             courseItem['code'] = row['課程流水號'] if row['課程流水號'] != None else None
             courseItem['campus'] = 'NTPU'
+            courseItem['category'] = self.categoryClassifier(courseItem['for_dept'], courseItem['obligatory_tf'])
             
             yield courseItem
 
@@ -184,3 +209,15 @@ class NtpuSpider(scrapy.Spider):
             location = None
 
         return Ctime, location
+
+
+    @staticmethod
+    def categoryClassifier(for_dept, obligatory_tf):  ##應修系級
+        if "體育" in for_dept:
+            return "體育類"
+        elif "通識" in for_dept:
+            return "通識類"
+        elif "共同" in for_dept or "軍訓" in for_dept:
+            return "其他類"
+        else:
+            return "必修類" if obligatory_tf else "選修類"
