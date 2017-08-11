@@ -68,10 +68,7 @@ class NtpuSpider(scrapy.Spider):
 
     def parse(self, response):
         soup = BeautifulSoup(response.body, 'lxml')
-        try:
-            table = soup.find('table')
-        except:
-            print("No Table Found!")
+        table = soup.find('table')
         df_course = pd.read_html(str(table))[0]
         
         # duplicate rows having more than one for_depts and obligatory_tf
@@ -100,6 +97,7 @@ class NtpuSpider(scrapy.Spider):
 
         # match columns
         for row in df_course.iterrows():
+            print(type(row))
             # 1.replace pd.null by None 2. transfer to str type
             def preprocess(item):
                 if pd.isnull(item):
@@ -151,7 +149,7 @@ class NtpuSpider(scrapy.Spider):
 
             ## time, location
             if row['上課時間、教室'] != None:
-                Ctime, location = self.ProcessTimeAndLocation(row['上課時間、教室'])
+                Ctime, location = self.parse_timeAndLocation(row['上課時間、教室'])
             else:
                 Ctime = None
                 location = None
@@ -164,13 +162,13 @@ class NtpuSpider(scrapy.Spider):
             ## code, campus
             courseItem['code'] = row['課程流水號'] if row['課程流水號'] != None else None
             courseItem['campus'] = 'NTPU'
-            courseItem['category'] = self.categoryClassifier(courseItem['for_dept'], courseItem['obligatory_tf'])
+            courseItem['category'] = self.parse_catgory(courseItem['for_dept'], courseItem['obligatory_tf'])
             
             yield courseItem
 
 
     @staticmethod
-    def ProcessTimeAndLocation(TimeAndLocation):
+    def parse_timeAndLocation(TimeAndLocation):
         if len(TimeAndLocation.replace('\t', ' ').split()) >= 1:
             timeAndClassroom = TimeAndLocation.replace('\t', ' ')
             items = timeAndClassroom.split()
@@ -212,7 +210,7 @@ class NtpuSpider(scrapy.Spider):
 
 
     @staticmethod
-    def categoryClassifier(for_dept, obligatory_tf):  ##應修系級
+    def parse_catgory(for_dept, obligatory_tf):  ##應修系級
         if "體育" in for_dept:
             return "體育類"
         elif "通識" in for_dept:

@@ -6,7 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from UCrawler.items import UcrawlerItem
-from .setting_selenium import cross_selenium
+from .setting_selenium import cross_selenium, tryLocateElemById, tryLocateElemByXpath
 
 class NutcSpider(scrapy.Spider):
     name = 'NUTC'
@@ -41,13 +41,11 @@ class NutcSpider(scrapy.Spider):
     def start_requests(self):
         driver = cross_selenium()
         driver.get(self.start_urls[0])
+        
         try:
-            element = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.ID, "sem"))
-            )
+            element = tryLocateElemById(driver, "sem")
         finally:
-            dropdown = driver.find_element_by_id('sem')
-            option = dropdown.find_elements_by_tag_name("option")
+            option = element.find_elements_by_tag_name("option")
             option[-1].click()
             time.sleep(3)
             soup = BeautifulSoup(driver.page_source, "html.parser")
