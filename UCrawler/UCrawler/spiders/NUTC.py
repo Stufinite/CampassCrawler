@@ -41,15 +41,12 @@ class NutcSpider(scrapy.Spider):
     def start_requests(self):
         driver = cross_selenium()
         driver.get(self.start_urls[0])
-        
-        try:
-            element = tryLocateElemById(driver, "sem")
-        finally:
-            option = element.find_elements_by_tag_name("option")
-            option[-1].click()
-            time.sleep(3)
-            soup = BeautifulSoup(driver.page_source, "html.parser")
-            driver.close()
+        dropdown = driver.find_element_by_id('sem')
+        option = dropdown.find_elements_by_tag_name("option")
+        option[-1].click()
+        time.sleep(3)
+        soup = BeautifulSoup(driver.page_source, "html.parser")
+        driver.close()
 
         dept_table = {i.text: i['value'] for i in soup.select('.selgray')[1].select('option') if '所' not in i.text and '專' not in i.text}
         latest_semester = soup.select('#sem')[0].select('option')[-1]['value']
