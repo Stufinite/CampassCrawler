@@ -9,61 +9,30 @@ import json
 import re
 from UCrawler.items import UcrawlerItem
 import queue
-#from UCrawler.items import UcrawlerItem
 
 class NtpuSpider(scrapy.Spider):
     name = 'NTPU'
-    #allowed_domains = ['sea.cc.ntpu.edu.tw']
-    #start_urls = ['https://sea.cc.ntpu.edu.tw/pls/dev_stud/course_query_all.queryByAllConditions']
-    #driver = webdriver.Chrome(executable_path='D:\chromedriver')
-    #headers = {'user-agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36'}
+    allowed_domains = ['sea.cc.ntpu.edu.tw']
+    start_urls = ['https://sea.cc.ntpu.edu.tw/pls/dev_stud/course_query_all.CHI_query_common']
+    post_urls = ['https://sea.cc.ntpu.edu.tw/pls/dev_stud/course_query_all.queryByAllConditions']
+
     headers = {'user-agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36','referer':'http://www.ntpu.edu.tw/chinese/'}
 
     def start_requests(self):
-        url = 'https://sea.cc.ntpu.edu.tw/pls/dev_stud/course_query_all.CHI_query_common'
-        re = requests.get(url, headers = self.headers)
-        soup = BeautifulSoup(re.text, 'lxml')
-        postpath = 'https://sea.cc.ntpu.edu.tw/pls/dev_stud/course_query_all.queryByAllConditions'
+        res = requests.get(self.start_urls[0], headers = self.headers)
+        soup = BeautifulSoup(res.text, 'lxml')
+        dept_table = soup.select('select')[1].select('option')[1:]
+        latest_semester = soup.find('select', {'name':"qYear"}).select('option')[1]['value']
 
-        ## College based finder
-        elem = soup.find('select')
-        schoolList = []
-        for item in elem.find_all('option'):
-            schoolList.append(item.string)
-            print(item.string)
-        schoolList.pop(0)
-
-        for school in schoolList:
-            print(school)
+        for option in dept_table:
             FormData = {
-            'qCollege': school.encode('big5'),
-            'qYear':'106',
+            'qdept': option['value'],
+            'qYear':latest_semester,
             'qTerm':'1',
             'seq1':'A',
             'seq2':'M'
             }
-            #This fail
-            #request_body = json.dumps(FormData)
-            #yield Request(postpath, method= "POST", body=request_body, headers=self.headers )
-            yield scrapy.FormRequest(postpath, formdata=FormData, encoding='big5')
-
-        ## department based finder(there are some special category will be ignored in college finder)
-        elem = soup.find_all('select')[1].select("optgroup[label='其它']")[0]
-        deptList = []
-        for dept in elem.find_all('option'):
-            print(dept.text)
-            deptList.append(dept['value'])
-
-        for dept in deptList:
-            FormData = {
-            'qdept': dept,
-            'qYear':'106',
-            'qTerm':'1',
-            'seq1':'A',
-            'seq2':'M'
-            }
-            
-            yield scrapy.FormRequest(postpath, formdata=FormData, encoding='big5')
+            yield scrapy.FormRequest(self.post_urls[0], formdata=FormData, encoding='big5')
 
 
     def parse(self, response):
