@@ -8,7 +8,6 @@ import pandas as pd
 import json
 import re
 from UCrawler.items import UcrawlerItem
-import queue
 
 class NtpuSpider(scrapy.Spider):
     name = 'NTPU'
