@@ -2,6 +2,10 @@
 
 ## [爬蟲爬取清單](https://docs.google.com/spreadsheets/d/1shRsbpbYUQtol0Q1Gbgdd3xn4dQy0MHkqDfLIUlKPIQ/edit#gid=270187308)
 
+## 單元測試:
+
+`cd UCrawler; python test.py 學校名稱`
+
 ## 執行指令:
 
 1. 中科:`scrapy crawl NUTC -o NUTC.json -t json`
