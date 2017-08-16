@@ -64,7 +64,7 @@ class NsysuSpider(scrapy.Spider):
 		res.encoding = 'big5'
 		soup = BeautifulSoup(res.text, "html.parser")
 
-		dept_table = {i.text:i['value'] for i in soup.select('#DPT_ID select')[0] if i.text != '' and (i['value'].startswith('A') or i['value'].startswith('B'))}
+		dept_table = {i.text:i['value'] for i in soup.select('#DPT_ID select')[0] if i.text != '' and (i['value'].startswith('A') or i['value'].startswith('B')) and '院' not in i.text}
 		latest_semester = soup.find('select', {'name':'D0'}).select('option')[0]['value']
 
 		for key, value in dept_table.items():
