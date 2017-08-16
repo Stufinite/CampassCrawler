@@ -41,9 +41,11 @@ class NccuSpider(scrapy.Spider):
 	    'G':11,
 	    'H':12,
 	}
+	cookies = None
 
 	def start_requests(self):
 		res = requests.get(self.start_urls[0])
+		self.cookies = {'ASP.NET_SessionId':res.cookies['ASP.NET_SessionId']}
 		soup = BeautifulSoup(res.text, 'lxml')
 
 		sel = soup.select("#yyssDDL")[0]
@@ -52,14 +54,12 @@ class NccuSpider(scrapy.Spider):
 		sel = soup.select("#t_colLB")[0]
 		opts1 = sel.find_all('option')[1:] #開課系級
 
-
 		NotFirst0 = False
 		NotFirst1 = False
 		NotFirst2 = False
 
-
 		# Post 開課系級
-		for opt1 in opts1[:5]:
+		for opt1 in opts1[0:1]:
 			if NotFirst0:
 				soup = self.getFirstPage()
 			NotFirst0 = True
@@ -68,9 +68,9 @@ class NccuSpider(scrapy.Spider):
 			sel = soup.select("#gde_tpeLB")[0]
 			opts2 = sel.find_all('option')[1:]  #大學、研究所
 
-		    
 		    #Post 大學、研究所
-			for opt2 in opts2[0:1]:
+			for opt2 in opts2:
+
 				if NotFirst1:
 					soup = self.getFirstPage()
 					soup = self.postSecondPage(soup, latest_semester, opt1)
@@ -84,7 +84,7 @@ class NccuSpider(scrapy.Spider):
 				for opt3 in opts3:
 					dep = opt3.text.replace(" ", "")
 					cat = opt2.text.replace(" ", "")
-					
+
 					if NotFirst2:
 						soup = self.getFirstPage()
 						soup = self.postSecondPage(soup, latest_semester, opt1)
@@ -92,27 +92,32 @@ class NccuSpider(scrapy.Spider):
 					NotFirst2 = True
 		            
 					data = self.getPostData('searchA', soup, latest_semester, opt1['value'], opt2['value'], opt3['value'])
-					yield scrapy.FormRequest(self.start_urls[0], formdata=data, headers=self.headers, meta={'dep':dep, 'cat':cat})
+					# yield scrapy.FormRequest(self.start_urls[0], formdata=data, headers=self.headers, meta={'dep':dep, 'cat':cat})
+					if cat == '整開/IntegratedCourses' and dep== '總體經濟學/Macroeconomics':
+						yield scrapy.FormRequest(self.start_urls[0], formdata=data, headers=self.headers, meta={'dep':dep, 'cat':cat})
 
 			
 	def parse(self, response):
 		print(response.meta['cat'])
 		print(response.meta['dep'])
 		soup = BeautifulSoup(response.body, 'lxml')
-		set_cookie = response.headers.get(b"Set-Cookie")
-		print(set_cookie)
-		cookie = str(set_cookie).split(";")[0].split("SessionId=")[1]
-		cookies = {'ASP.NET_SessionId':cookie}
 
 		while True:
 			## Define column header
 			df = pd.read_html(str(soup))[4]
-			columns = ['dropOne']
-			columns.extend(list(df.xs(0)[2:]))
-			df.drop(df.columns[-1], axis=1, inplace=True) # drop the last column
-			df.columns = columns
-			df.drop(0, inplace=True)  
 
+			## if courses Length < 10 ,the side column will disappear(外語學院>碩士班>日本語文學系) 
+			courseLen = len(df[pd.notnull(df[0])])-1  ##minus column header
+			if courseLen >= 10:
+				columns = ['加入我的追蹤清單']
+				columns.extend(list(df.xs(0)[2:]))
+				df.drop(df.columns[-1], axis=1, inplace=True) # drop the last column
+				df.columns = columns
+				df.drop(0, inplace=True)  
+			else:
+				columns = list(df.xs(0))
+				df.columns = columns
+				df.drop(0, inplace=True)  
 
 			## 處理單雙行
 			courses = []
@@ -153,9 +158,10 @@ class NccuSpider(scrapy.Spider):
 						appendingCourse['系所年級/開課院系'] = dep
 						singleCourses.append(appendingCourse)
 
-            ## courseItem
+
 			df_course = pd.DataFrame(singleCourses)
-			df_course.to_csv("NCCU.csv")
+			df_course.to_csv("NCCU5.csv")
+
 
 			for row in df_course.iterrows():
 				def preprocess(item):
@@ -183,35 +189,36 @@ class NccuSpider(scrapy.Spider):
 				courseItem['category'] = self.parse_category(row['系所年級/開課院系'], row['通識類別'], courseItem['title'], courseItem['obligatory_tf'])
 				yield courseItem
 
-
-
 			pageMsg = soup.select("#FilterXX")[0].find("span").text
 			pageNum = int(re.findall(r'[\d]+', pageMsg)[0])
 			print(pageNum)
+			print(len(df_course))
+			break
 
-			if 'href' not in str(soup.select("#nextLB")[0]):
-				break
 
-			# post Next Page
-			viewstate = soup.select("#__VIEWSTATE")[0]['value']
-			viewstategenerator = soup.select("#__VIEWSTATEGENERATOR")[0]['value']
+			# if 'href' not in str(soup.select("#nextLB")[0]):
+			# 	break
 
-			data = {
-				'__EVENTTARGET':"nextLB",
-				'__VIEWSTATE':viewstate,
-				'__VIEWSTATEGENERATOR':viewstategenerator,
-				'__SCROLLPOSITIONX':'0',
-				'__SCROLLPOSITIONY':'200',
-				'numberpageRBL':'50',
-				'numberpageRBL2':'50'
-				}
+			# # post Next Page
+			# viewstate = soup.select("#__VIEWSTATE")[0]['value']
+			# viewstategenerator = soup.select("#__VIEWSTATEGENERATOR")[0]['value']
+
+			# data = {
+			# 	'__EVENTTARGET':"nextLB",
+			# 	'__VIEWSTATE':viewstate,
+			# 	'__VIEWSTATEGENERATOR':viewstategenerator,
+			# 	'__SCROLLPOSITIONX':'0',
+			# 	'__SCROLLPOSITIONY':'200',
+			# 	'numberpageRBL':'50',
+			# 	'numberpageRBL2':'50'
+			# 	}
 			
-			res = requests.post(self.post_urls[0], data=data, headers=self.headers, cookies=cookies)
-			soup = BeautifulSoup(res.text, 'lxml')
+			# res = requests.post(self.post_urls[0], data=data, headers=self.headers, cookies=self.cookies)
+			# soup = BeautifulSoup(res.text, 'lxml')
 
-			pageMsg = soup.select("#FilterXX")[0].find("span").text
-			pageNum = int(re.findall(r'[\d]+', pageMsg)[0])
-			print(pageNum)
+			# pageMsg = soup.select("#FilterXX")[0].find("span").text
+			# pageNum = int(re.findall(r'[\d]+', pageMsg)[0])
+			# print(pageNum)
 
 	@staticmethod
 	def parse_location(location):
@@ -261,21 +268,21 @@ class NccuSpider(scrapy.Spider):
 		# Get First Page
 	@classmethod
 	def getFirstPage(cls):
-		res = requests.get(cls.start_urls[0])
+		res = requests.get(cls.start_urls[0], cookies=cls.cookies)
 		soup = BeautifulSoup(res.text, 'lxml')
 		return soup
 	    
 	@classmethod
 	def postSecondPage(cls, soup, latest_semester, opt1):
 		data = cls.getPostData('t_colLB', soup, latest_semester, opt1['value'])
-		res = requests.post(cls.start_urls[0], data=data, headers=cls.headers)
+		res = requests.post(cls.start_urls[0], data=data, headers=cls.headers, cookies=cls.cookies)
 		soup = BeautifulSoup(res.text, 'lxml')
 		return soup
 	    
 	@classmethod
 	def postThirdPage(cls, soup, latest_semester, opt1, opt2):
 		data = cls.getPostData('gde_tpeLB', soup, latest_semester, opt1['value'], opt2['value'])
-		res = requests.post(cls.start_urls[0], data=data, headers=cls.headers)
+		res = requests.post(cls.start_urls[0], data=data, headers=cls.headers, cookies=cls.cookies)
 		soup = BeautifulSoup(res.text, 'lxml')
 		return soup
 

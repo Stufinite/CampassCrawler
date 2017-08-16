@@ -139,7 +139,6 @@ class NccuSpider(scrapy.Spider):
 
             ## courseItem
 			df_course = pd.DataFrame(singleCourses)
-			df_course.to_csv("NCCU.csv")
 
 			for row in df_course.iterrows():
 				courseItem = UcrawlerItem()

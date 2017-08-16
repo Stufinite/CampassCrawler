@@ -37,102 +37,104 @@ class NtpuSpider(scrapy.Spider):
     def parse(self, response):
         soup = BeautifulSoup(response.body, 'lxml')
         table = soup.find('table')
-        df_course = pd.read_html(str(table))[0]
         
-        # duplicate rows having more than one for_depts and obligatory_tf
-        del_row_idxs = []
-        add_rows = []
-        def duplicateDepts(row):
-            if not '通' in row['必選修別']:
-                forDepts = row['應修系級'].split()
-                obligatory_tfs = row['必選修別'].split()
+        if table != None:
+            df_course = pd.read_html(str(table))[0]
+            TableExit = True
+            # duplicate rows having more than one for_depts and obligatory_tf
+            del_row_idxs = []
+            add_rows = []
+            def duplicateDepts(row):
+                if not '通' in row['必選修別']:
+                    forDepts = row['應修系級'].split()
+                    obligatory_tfs = row['必選修別'].split()
 
-                if len(forDepts) > 1:
-                    del_row_idxs.append(row.name)
+                    if len(forDepts) > 1:
+                        del_row_idxs.append(row.name)
 
-                    for i in range(0, len(forDepts)):
-                        row['應修系級'] = forDepts[i]
-                        row['必選修別'] = obligatory_tfs[i]
-                        add_rows.append(dict(row))
+                        for i in range(0, len(forDepts)):
+                            row['應修系級'] = forDepts[i]
+                            row['必選修別'] = obligatory_tfs[i]
+                            add_rows.append(dict(row))
 
-        df_course.apply(duplicateDepts,axis=1)
-        
-        # print('preprocess len = ', len(df_course))
-        add_df = pd.DataFrame(add_rows)
-        df_course = pd.concat([df_course, add_df])
-        df_course.drop(del_row_idxs, inplace=True)
-        # print('processed len = ', len(df_course))
+            df_course.apply(duplicateDepts,axis=1)
+            
+            # print('preprocess len = ', len(df_course))
+            add_df = pd.DataFrame(add_rows)
+            df_course = pd.concat([df_course, add_df])
+            df_course.drop(del_row_idxs, inplace=True)
+            # print('processed len = ', len(df_course))
 
-        # match columns
-        for row in df_course.iterrows():
-            print(type(row))
-            # 1.replace pd.null by None 2. transfer to str type
-            def preprocess(item):
-                if pd.isnull(item):
-                    return None
+            # match columns
+            for row in df_course.iterrows():
+                # print(type(row))
+                # 1.replace pd.null by None 2. transfer to str type
+                def preprocess(item):
+                    if pd.isnull(item):
+                        return None
+                    else:
+                        return str(item)
+                row = pd.Series(row[1]).apply(preprocess)
+                
+                courseItem = UcrawlerItem()
+                ## department, obligatory_tf
+                courseItem['department'] = row['開課系所'] if row['開課系所'] != None else None
+                courseItem['obligatory_tf'] = True if row['必選修別'] == '必' else False
+
+                ## for_dept, grade
+                if not '通' in row['必選修別']:
+                    for_dept = re.sub("\d", "",  row['應修系級']) if row['應修系級'] != None else None
+                    grade = row['應修系級'].replace(for_dept, "") if row['應修系級'] != None else None
                 else:
-                    return str(item)
-            row = pd.Series(row[1]).apply(preprocess)
-            
-            courseItem = UcrawlerItem()
-            ## department, obligatory_tf
-            courseItem['department'] = row['開課系所'] if row['開課系所'] != None else None
-            courseItem['obligatory_tf'] = True if row['必選修別'] == '必' else False
+                    for_dept = ", ".join(row['應修系級'].split()) if row['應修系級'] != None else None
+                    grade = None
 
-            ## for_dept, grade
-            if not '通' in row['必選修別']:
-                for_dept = re.sub("\d", "",  row['應修系級']) if row['應修系級'] != None else None
-                grade = row['應修系級'].replace(for_dept, "") if row['應修系級'] != None else None
-            else:
-                for_dept = ", ".join(row['應修系級'].split()) if row['應修系級'] != None else None
-                grade = None
+                courseItem['for_dept'] = for_dept
+                courseItem['grade'] = grade
+                
+                ## title, note
+                if '備註' in row['科目名稱']:
+                    title = row['科目名稱'].split("備註")[0]
+                    note = row['科目名稱'].split("備註")[1].replace("：","")
+                    if note == "":
+                        note = None 
+                else:  ##basically, this will not happen
+                    title = row['科目名稱']
+                    note = None
 
-            courseItem['for_dept'] = for_dept
-            courseItem['grade'] = grade
-            
-            ## title, note
-            if '備註' in row['科目名稱']:
-                title = row['科目名稱'].split("備註")[0]
-                note = row['科目名稱'].split("備註")[1].replace("：","")
-                if note == "":
-                    note = None 
-            else:  ##basically, this will not happen
-                title = row['科目名稱']
-                note = None
+                courseItem['title'] = title
+                courseItem['note'] = note
 
-            courseItem['title'] = title
-            courseItem['note'] = note
+                ## professor
+                if row['授課教師'] != None:
+                    row['授課教師'] = row['授課教師'].replace("張�睇�","張恒豪").replace("林�琝�","林恒志")
+                    profs = list(row['授課教師'].split())
+                else:
+                    profs = []
 
-            ## professor
-            if row['授課教師'] != None:
-                row['授課教師'] = row['授課教師'].replace("張�睇�","張恒豪").replace("林�琝�","林恒志")
-                profs = list(row['授課教師'].split())
-            else:
-                profs = []
+                ##deal with error code
+                #if '�'.encode() in str(row['授課教師']).encode():
+                #    print(row[['科目名稱','授課教師']])
+                courseItem['professor'] = profs
 
-            ##deal with error code
-            #if '�'.encode() in str(row['授課教師']).encode():
-            #    print(row[['科目名稱','授課教師']])
-            courseItem['professor'] = profs
+                ## time, location
+                if row['上課時間、教室'] != None:
+                    Ctime, location = self.parse_timeAndLocation(row['上課時間、教室'])
+                else:
+                    Ctime = None
+                    location = None
+                courseItem['time'] = Ctime
+                courseItem['location'] = location
 
-            ## time, location
-            if row['上課時間、教室'] != None:
-                Ctime, location = self.parse_timeAndLocation(row['上課時間、教室'])
-            else:
-                Ctime = None
-                location = None
-            courseItem['time'] = Ctime
-            courseItem['location'] = location
+                ## credits
+                courseItem['credits'] = float(row['學分']) if row['學分'] != None else None
 
-            ## credits
-            courseItem['credits'] = float(row['學分']) if row['學分'] != None else None
-
-            ## code, campus
-            courseItem['code'] = row['課程流水號'] if row['課程流水號'] != None else None
-            courseItem['campus'] = 'NTPU'
-            courseItem['category'] = self.parse_catgory(courseItem['for_dept'], courseItem['obligatory_tf'])
-            
-            yield courseItem
+                ## code, campus
+                courseItem['code'] = row['課程流水號'] if row['課程流水號'] != None else None
+                courseItem['campus'] = 'NTPU'
+                courseItem['category'] = self.parse_catgory(courseItem['for_dept'], courseItem['obligatory_tf'])
+                
+                yield courseItem
 
 
     @staticmethod
