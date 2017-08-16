@@ -28,7 +28,7 @@ class NtpuSpider(scrapy.Spider):
 		res.encoding = 'big5'
 		soup = BeautifulSoup(res.text, 'lxml')
 
-		## Beacause it distinguish only master column
+		## only have to distinguish master column, to get different page
 		masters = []
 		start = False
 		for script in soup.find_all("script"):
@@ -42,6 +42,7 @@ class NtpuSpider(scrapy.Spider):
 		                    master = line.split("=")[1].replace("\"","").replace(";","")
 		                    if bool(re.match(r'\d', master)):
 		                        masters.append(master)
+		                        
 		for master in masters:
 			## clsid02 系所不會被引擎索引，所以不需要變動
 			url = "https://web.sys.scu.edu.tw/class42.asp"
