@@ -15,6 +15,10 @@ class UCrawlerTest(unittest.TestCase):
 
 if __name__ == '__main__':
 	import random
+	import os.path
+	if os.path.isfile("scrapy.log"):
+		os.remove("scrapy.log")
+
 	print(len(sys.argv))
 	if len(sys.argv) == 1:
 		school = [
