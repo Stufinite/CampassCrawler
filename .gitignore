@@ -1,6 +1,7 @@
 # project stuff
 ghostdriver.log
 *.json
+*.csv
 
 # virtualenv
 venv

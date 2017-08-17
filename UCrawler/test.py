@@ -15,11 +15,11 @@ class UCrawlerTest(unittest.TestCase):
 
 if __name__ == '__main__':
 	import random
-	print(len(sys.argv))
 	if len(sys.argv) == 1:
 		school = [
 			'NUTC',
-			'NSYSU'
+			'NSYSU',
+			'NCHU'
 		]
 
 		school = random.choice(school)
