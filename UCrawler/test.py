@@ -14,7 +14,9 @@ class UCrawlerTest(unittest.TestCase):
 		self.assertEqual(True, status)
 
 if __name__ == '__main__':
-	import random
+	import random, os.path
+	if os.path.isfile("scrapy.log"):
+		os.remove("scrapy.log")
 	if len(sys.argv) == 1:
 		school = [
 			'NUTC',

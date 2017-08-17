@@ -21,7 +21,6 @@ class NtpuSpider(scrapy.Spider):
 		'五':5,
 		'六':6
 		}
-	failMasters = []
 
 	def start_requests(self):
 		res = requests.get(self.start_urls[0])
@@ -32,17 +31,18 @@ class NtpuSpider(scrapy.Spider):
 		masters = []
 		start = False
 		for script in soup.find_all("script"):
-		    if '//v4.0' in str(script):
-		        if '人社院' in str(script):
-		            start = True
-		        if start:
-		            lines = script.text.split()
-		            for line in lines:
-		                if "=" in line:
-		                    master = line.split("=")[1].replace("\"","").replace(";","")
-		                    if bool(re.match(r'\d', master)):
-		                        masters.append(master)
-		                        
+			if '//v4.0' in str(script):
+				if '人社院' in str(script):
+					start = True
+				if start:
+					lines = script.text.split()
+					for line in lines:
+						if "=" in line:
+							master = line.split("=")[1].replace("\"","").replace(";","")
+							if bool(re.match(r'\d', master)):
+								masters.append(master)
+
+
 		for master in masters:
 			## clsid02 系所不會被引擎索引，所以不需要變動
 			url = "https://web.sys.scu.edu.tw/class42.asp"
@@ -54,18 +54,21 @@ class NtpuSpider(scrapy.Spider):
 				'smester':"1"
 				}
 			yield scrapy.FormRequest(url, formdata=data, encoding='big5', headers=self.headers, meta={'master': master})
-		print("無課表資料:", self.failMasters)
 
 	def parse(self, response):
 		## blocked
-		if len(response.body) == 548:
-			self.failMasters.append(response.meta['master'])
+		html = response.body
+		soup = BeautifulSoup(response.body, 'lxml')
+
+		trs = soup.find_all('table')[0].find_all('tr')
+		trLen = len(trs)
+
+		if trLen <= 1:
+			print("[No Table Found]", response.meta['master'])
+
 		else:
-			try:
-				df_course = pd.read_html(response.body)[0]
-			except:
-				self.failMasters.append(response.meta['master'])
-				raise Exception("No Table Found")
+			df_course = pd.read_html(response.body)[0]
+
 			##drop coursename == null
 			df_course.drop(df_course[pd.isnull(df_course[3])].index,inplace=True)
 
