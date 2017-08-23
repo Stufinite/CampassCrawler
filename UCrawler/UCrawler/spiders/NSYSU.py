@@ -97,5 +97,5 @@ class NsysuSpider(scrapy.Spider):
 				courseItem['note'] = courseDict['備註']
 				courseItem['campus'] = 'NSYSU'
 				courseItem['discipline'] = courseItem['for_dept'] if self.genra.get(courseItem['department'], '') == '通識類' else ''
-				courseItem['category'] = self.genra.get(courseItem['department'], '必修類' if courseItem['obligatory_tf'] else '選修類')
+				courseItem['category'] = self.genra.get(courseItem['department'], '大學部')
 				yield courseItem

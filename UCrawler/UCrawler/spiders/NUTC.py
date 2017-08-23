@@ -76,7 +76,7 @@ class NutcSpider(scrapy.Spider):
             courseItem['campus'] = 'NUTC'
             courseItem['discipline'] = re.search(r'\((.+?)\)', data['課程']).group(1) if self.genra.get(courseItem['department'], '') == '通識類' else ''
             courseItem['title'] = data['課程'].replace(re.search(r'\((.+?)\)', data['課程']).group(0), '').strip() if self.genra.get(courseItem['department'], '') == '通識類' else data['課程']
-            courseItem['category'] = self.genra.get(courseItem['department'], '必修類' if courseItem['obligatory_tf'] else '選修類')
+            courseItem['category'] = self.genra.get(courseItem['department'], '大學部')
             yield courseItem
 
     @classmethod
