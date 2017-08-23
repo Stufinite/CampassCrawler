@@ -1,5 +1,7 @@
 # CampassCrawler (大學課程爬蟲)[![Build Status](https://travis-ci.org/Stufinite/CampassCrawler.svg?branch=master)](https://travis-ci.org/Stufinite/CampassCrawler)
 
+
+
 ## [爬蟲爬取清單](https://docs.google.com/spreadsheets/d/1shRsbpbYUQtol0Q1Gbgdd3xn4dQy0MHkqDfLIUlKPIQ/edit#gid=270187308)
 
 ## 單元測試:
@@ -126,6 +128,7 @@ class NutcSpider(scrapy.Spider):
 
 ## Acknowledgments
 
+* 感謝colorgy，部份爬蟲參考自他們的open source
 * 感謝中興大學計資中心提供協助
 * 感謝[黃川哲](https://github.com/CJHwong)大大開的坑，讓學弟學了不少的Python，學長們的 code 也讓我受益良多~
 * 感謝[Pastleo](https://github.com/chgu82837)大大開的坑，讓學弟學了不少的Python，學長們的 code 也讓我受益良多~
