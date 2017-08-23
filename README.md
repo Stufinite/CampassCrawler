@@ -93,7 +93,7 @@ class NutcSpider(scrapy.Spider):
           ]
         }
       ],
-      "professor": "楊淳斐",
+      "professor": "楊淳斐、林清標",
       "location": [
         "(3304)"
       ],
