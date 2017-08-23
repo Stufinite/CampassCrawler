@@ -73,8 +73,8 @@ class NutcSpider(scrapy.Spider):
     * note: 備註
     * campus: 校區
     * discipline: 通識領域類別 e.q. 自然科學領域, 社會科學領域...
-    * category: 課程類別，會根據`1.的genra`變數，去判斷，把體育類的課程分類給`體育類`，軍訓、師培課程分為`其他類`* ，資工、資管、法律等正常系所的課程，依據必選修分為`必修類、選修類`
-        * 程式碼統一這樣寫:`courseItem['category'] = self.genra.get(courseItem['department'], '必修類' if courseItem['obligatory_tf'] else '選修類')`
+    * category: 課程類別，會根據`1.的genra`變數，去判斷，把體育類的課程分類給`體育類`，軍訓、師培課程分為`其他類`* ，資工、資管、法律等正常系所的課程，分為`大學部`
+        * 程式碼統一這樣寫:`courseItem['category'] = self.genra.get(courseItem['department'], '大學部')`
 
 3. 爬蟲輸出 JSON 格式： 
     [參考網址](https://aisap.nutc.edu.tw/public/day/course_list.aspx?sem=1061&stype=ge)
