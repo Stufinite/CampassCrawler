@@ -17,12 +17,6 @@ class NchuSpider(scrapy.Spider):
         '師資培育中心':'其他類'
     }
 
-    TrueFalseTable = {
-        True:"必修類",
-        False:"選修類"
-    }
-
-
     def parse(self, response):
         try:
             dataList = json.loads(response.text)
@@ -48,7 +42,7 @@ class NchuSpider(scrapy.Spider):
             courseItem['campus'] = 'NCHU'
             courseItem['discipline'] = data['discipline']
             courseItem['title'] = data['title_parsed']['zh_TW']
-            courseItem['category'] = self.genra.get(courseItem['department'], '其他類' if courseItem['for_dept'] == '全校共同' else self.TrueFalseTable[courseItem['obligatory_tf']])
+            courseItem['category'] = self.genra.get(courseItem['department'], '大學部')
             yield courseItem
 
     @staticmethod
