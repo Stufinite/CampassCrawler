@@ -1,5 +1,5 @@
 PyPrind==2.9.9
-requests==2.12.5
+requests==2.20.0
 simplejson==3.10.0
 scrapy
 selenium
